@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ferda Movie Raters</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #6b6b6b;
+      color: gold;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #e50914;
+      font-size: 2.2rem;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    p.subtitle {
+      color: #d4b800;
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+    }
+    .search-section {
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 14px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .search-section h3 {
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: #bba000;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .search-bar {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      padding: 11px 14px;
+      font-size: 15px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      flex: 1;
+      max-width: 320px;
+      background: #1a1a1a;
+      color: #fff;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: gold; }
+    input::placeholder { color: #666; }
+    button {
+      padding: 11px 22px;
+      font-size: 15px;
+      background: #e50914;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover { background: #c0060f; }
+    button:active { transform: scale(0.98); }
+    button.random-btn {
+      background: #3a3a00;
+      color: gold;
+      border: 1px solid gold;
+    }
+    button.random-btn:hover { background: #555500; }
+    .hint {
+      color: #888;
+      font-size: 0.78rem;
+      margin-top: 8px;
+    }
+    .divider {
+      text-align: center;
+      color: #999;
+      margin: 8px 0;
+      font-size: 0.85rem;
+    }
+    #result { display: none; margin-top: 10px; }
+    .movie-card {
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 14px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .movie-card h2 { font-size: 1.5rem; margin-bottom: 6px; color: gold; }
+    .genres {
+      color: #bba000;
+      font-size: 0.88rem;
+      margin-bottom: 20px;
+    }
+    .rating-info {
+      display: flex;
+      gap: 36px;
+    }
+    .stat {
+      text-align: center;
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 12px 20px;
+      border: 1px solid #3a3a3a;
+    }
+    .stat .value { font-size: 1.9rem; color: #e50914; font-weight: bold; }
+    .stat .label { font-size: 0.8rem; color: #bba000; margin-top: 2px; }
+    .metrics-card {
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 24px;
+      border: 1px solid #3a3a3a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .metrics-card h3 { margin-bottom: 16px; font-size: 1.05rem; color: gold; letter-spacing: 0.3px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #1a1a1a;
+      padding: 11px 12px;
+      text-align: left;
+      font-size: 0.85rem;
+      color: gold;
+      border-bottom: 2px solid #444;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #333;
+      font-size: 0.93rem;
+      color: gold;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,215,0,0.04); }
+    .winner { color: #4caf50; font-weight: bold; }
+    .error { color: #e50914; margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <h1>Movie Rating</h1>
+  <p class="subtitle">Search a movie and compare hashtable performance</p>
+
+  <div class="search-section">
+    <h3>Search by Movie ID</h3>
+    <div class="search-bar">
+      <input type="number" id="movieInput" placeholder="Enter Movie ID" />
+      <button onclick="searchById()">Search</button>
+    </div>
+    <p class="hint">Valid IDs range from {{ min_id }} to {{ max_id }}</p>
+  </div>
+
+  <div class="divider">— or —</div>
+
+  <div class="search-section">
+    <h3>Search by Movie Name</h3>
+    <div class="search-bar">
+      <input type="text" id="movieNameInput" placeholder="e.g. Toy Story (1995)" />
+      <button onclick="searchByName()">Search</button>
+      <button class="random-btn" onclick="searchRandom()">Random</button>
+    </div>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+  <script>
+    async function searchRandom() {
+      const res = await fetch("/random");
+      const data = await res.json();
+      await runSearch(data.movie_id);
+    }
+
+    async function searchById() {
+      const id = document.getElementById("movieInput").value;
+      if (!id) return;
+      await runSearch(id);
+    }
+
+    async function searchByName() {
+      const name = document.getElementById("movieNameInput").value;
+      if (!name) return;
+      const res = await fetch("/search_by_name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name })
+      });
+      if (!res.ok) {
+        const div = document.getElementById("result");
+        div.style.display = "block";
+        div.innerHTML = '<p class="error">Movie not found, try a different name</p>';
+        return;
+      }
+
+      const data = await res.json();
+      await runSearch(data.movie_id);
+    }
+    async function runSearch(movie_id) {
+      const res = await fetch("/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ movie_id: movie_id })
+      });
+
+      const div = document.getElementById("result");
+      div.style.display = "block";
+
+      if (!res.ok) {
+        div.innerHTML = '<p class="error">ID not found, try another</p>';
+        return;
+      }
+
+      const d = await res.json();
+      const scFaster = d.sc_lookup_time <= d.lp_lookup_time;
+      div.innerHTML = `
+        <div class="movie-card">
+          <h2>${d.title}</h2>
+          <p class="genres">${d.genres}</p>
+          <div class="rating-info">
+            <div class="stat">
+              <div class="value">${d.avg_rating}</div>
+              <div class="label">Average Rating</div>
+            </div>
+            <div class="stat">
+              <div class="value">${d.total_ratings}</div>
+              <div class="label">Total Ratings</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-card">
+          <h3>Performance Comparison</h3>
+          <table>
+            <tr>
+              <th>Metric</th>
+              <th>Separate Chaining</th>
+              <th>Linear Probing</th>
+            </tr>
+            <tr>
+              <td>Insert Time (all data)</td>
+              <td>${d.sc_insert_time}s</td>
+              <td>${d.lp_insert_time}s</td>
+            </tr>
+            <tr>
+              <td>Lookup Time</td>
+              <td class="${scFaster ? 'winner' : ''}">${d.sc_lookup_time}s</td>
+              <td class="${!scFaster ? 'winner' : ''}">${d.lp_lookup_time}s</td>
+            </tr>
+            <tr>
+              <td>Total Collisions</td>
+              <td>${d.sc_collisions.toLocaleString()}</td>
+              <td>${d.lp_collisions.toLocaleString()}</td>
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
